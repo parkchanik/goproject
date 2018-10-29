@@ -29,11 +29,18 @@ type User struct {
 
 type SendBox struct {
 	Boxidx 			int 
-	Sender_address 		string 
+	Sender_address 	string 
 	Boxmsg 			string 
 	Send_wei 		int 
 }
 
+type SendBoxRanking struct {
+	Rank 				int
+	Sender_address 		string
+    Last_boxmsg			string
+	Total_take_token 	int
+			
+}
 
 type Person struct {
 	Id         int
@@ -84,6 +91,36 @@ func getSendBoxList(c *gin.Context) {
 	
 }
 
+func getBoxRanking(c *gin.Context) {
+
+	var boxranking SendBoxRanking
+
+	var boxrankings []SendBoxRanking
+
+	rows , err := db.Query("CALL SP_SEND_BOX_RANKING(1);")
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&boxranking.Rank , &boxranking.Sender_address , &boxranking.Last_boxmsg , &boxranking.Total_take_token)
+		boxrankings = append(boxrankings , boxranking)
+
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	defer rows.Close()
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": boxrankings,
+		"count":  len(boxrankings),
+	})
+
+}
+
 
 
 func putMemberInfoByUserNo(c *gin.Context) {
@@ -127,7 +164,7 @@ func main() {
 	router.GET("/api/user/:user_no", getMemberInfoByUserNo)
 
 	router.GET("/sendboxlist", getSendBoxList)
-	
+	router.GET("/sendaboxranking", getBoxRanking)
 	router.GET("/person/:id", func(c *gin.Context) {
 		var (
 			person Person
