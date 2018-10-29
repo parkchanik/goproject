@@ -59,25 +59,29 @@ func getMemberInfoByUserNo(c *gin.Context) {
 func getSendBoxList(c *gin.Context) {
 	var sendbox SendBox 
 
-	//var sendboxs []SendBox
+	var sendboxs []SendBox
 	//row := db.QueryRow("select id, username, first_name, middle_name, last_name, email, mobile_phone, login_attempt, active_status FROM MEMBER_INFO where id = ?;", id)
-	row := db.QueryRow("CALL SP_SEND_BOX_LIST(1);")
-	/*
+	//rows := db.QueryRow("CALL SP_SEND_BOX_LIST(1);")
+	
+	rows , err := db.Query("CALL SP_SEND_BOX_LIST(1);")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	for rows.Next() {
-		err = rows.Scan(&person.Id, &person.First_Name, &person.Last_Name)
-		persons = append(persons, person)
+		err = rows.Scan(&sendbox.Boxidx, &sendbox.Sender_address, &sendbox.Boxmsg, &sendbox.Send_wei)
+		sendboxs = append(sendboxs, sendbox)
 		if err != nil {
 			fmt.Print(err.Error())
 		}
 	}
 	defer rows.Close()
-*/
-	err = row.Scan(&sendbox.Boxidx, &sendbox.Sender_address, &sendbox.Boxmsg, &sendbox.Send_wei)
-	if err != nil {
-		c.JSON(http.StatusOK, nil)
-	} else {
-		c.JSON(http.StatusOK, sendbox)
-	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"result": sendboxs,
+		"count":  len(sendboxs),
+	})
+	
 }
 
 
