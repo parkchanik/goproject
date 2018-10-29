@@ -84,10 +84,14 @@ func getSendBoxList(c *gin.Context) {
 	}
 	defer rows.Close()
 
+	
+	c.Header("Access-Control-Allow-Origin" , "*")
 	c.JSON(http.StatusOK, gin.H{
 		"result": sendboxs,
 		"count":  len(sendboxs),
 	})
+	
+	
 	
 }
 
@@ -114,6 +118,7 @@ func getBoxRanking(c *gin.Context) {
 
 	defer rows.Close()
 
+	c.Header("Access-Control-Allow-Origin" , "*")
 	c.JSON(http.StatusOK, gin.H{
 		"result": boxrankings,
 		"count":  len(boxrankings),
@@ -163,7 +168,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/api/user/:user_no", getMemberInfoByUserNo)
 
-	router.GET("/sendboxlist", getSendBoxList)
+	router.GET("/sendaboxlist", getSendBoxList)
 	router.GET("/sendaboxranking", getBoxRanking)
 	router.GET("/person/:id", func(c *gin.Context) {
 		var (
@@ -188,6 +193,6 @@ func main() {
 		c.JSON(http.StatusOK, result)
 	})
 	fmt.Println("test")
-	router.Run(":8000")
+	router.Run(":3030")
 
 }
