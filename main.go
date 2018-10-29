@@ -3,6 +3,12 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"database/sql"
+	"log"
+	"strconv"
+	"golang.org/x/crypto/bcrypt"
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql/driver/mysql"
 )
 
 func main() {
