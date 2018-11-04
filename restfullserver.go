@@ -1,7 +1,8 @@
 package main
 
 import (
-	"bytes"
+	//"bytes"
+	//"context"
 	"fmt"
 	"net/http"
 	"database/sql"
@@ -48,19 +49,9 @@ type Person struct {
 	Last_Name  string
 }
 
-func getMemberInfoByUserNo(c *gin.Context) {
-	var user User 
-
-	user_no := c.Param("user_no")
-	//row := db.QueryRow("select id, username, first_name, middle_name, last_name, email, mobile_phone, login_attempt, active_status FROM MEMBER_INFO where id = ?;", id)
-	row := db.QueryRow("select user_no , server_idx , publisher_id , auth_idx , nickname , gold , input_time FROM MEMBER_INFO where user_no = ?;", user_no)
+func getTestString(c *gin.Context) {
 	
-	err = row.Scan(&user.User_no, &user.Server_idx, &user.Publisher_id, &user.Auth_idx, &user.Nickname, &user.Gold, &user.Input_time)
-	if err != nil {
-		c.JSON(http.StatusOK, nil)
-	} else {
-		c.JSON(http.StatusOK, user)
-	}
+	c.JSON(http.StatusOK , gin.H{ "result" : "testok"})
 }
 
 func getSendBoxList(c *gin.Context) {
@@ -126,7 +117,32 @@ func getBoxRanking(c *gin.Context) {
 
 }
 
+func postTakeBox(c *gin.Context) {
+		
+		
+	type OutReturn struct {
+		O_return         int
+	}
 
+	var outreturn OutReturn
+
+	boxidx := c.PostForm("boxidx")
+	takeaddress := c.PostForm("takeaddress")
+
+	row := db.QueryRow("CALL SP_SEND_BOX_CAN_TAKE_SENDBOX(?,?,@o_return);" , boxidx , takeaddress)
+
+	err = row.Scan(&outreturn.O_return)
+
+	c.Header("Access-Control-Allow-Origin" , "*")
+	c.JSON(http.StatusOK, gin.H{
+		"result": outreturn ,
+		"error" : err ,
+	})
+
+
+}
+
+/*
 
 func putMemberInfoByUserNo(c *gin.Context) {
 
@@ -162,14 +178,31 @@ func putMemberInfoByUserNo(c *gin.Context) {
 }
 
 
+func getMemberInfoByUserNo(c *gin.Context) {
+	var user User 
+
+	user_no := c.Param("user_no")
+	//row := db.QueryRow("select id, username, first_name, middle_name, last_name, email, mobile_phone, login_attempt, active_status FROM MEMBER_INFO where id = ?;", id)
+	row := db.QueryRow("select user_no , server_idx , publisher_id , auth_idx , nickname , gold , input_time FROM MEMBER_INFO where user_no = ?;", user_no)
+	
+	err = row.Scan(&user.User_no, &user.Server_idx, &user.Publisher_id, &user.Auth_idx, &user.Nickname, &user.Gold, &user.Input_time)
+	if err != nil {
+		c.JSON(http.StatusOK, nil)
+	} else {
+		c.JSON(http.StatusOK, user)
+	}
+}
+*/
+
 func main() {
 	
 
 	router := gin.Default()
-	router.GET("/api/user/:user_no", getMemberInfoByUserNo)
-
+	//router.GET("/api/user/:user_no", getMemberInfoByUserNo)
+    router.GET("/" , getTestString)
 	router.GET("/sendaboxlist", getSendBoxList)
 	router.GET("/sendaboxranking", getBoxRanking)
+	router.POST("/takeabox" , postTakeBox)
 	router.GET("/person/:id", func(c *gin.Context) {
 		var (
 			person Person
