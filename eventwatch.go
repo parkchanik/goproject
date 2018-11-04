@@ -5,6 +5,8 @@ import (
     "fmt"
     "log"
     "strings"
+    "math/big"
+
     "github.com/ethereum/go-ethereum"
     "github.com/ethereum/go-ethereum/accounts/abi"
     "github.com/ethereum/go-ethereum/common"
@@ -54,12 +56,14 @@ func main() {
             fmt.Println(vLog.BlockHash.Hex()) // 0x3404b8c050aa0aacd0223e91b5c32fee6400f357764771d0684fa7b3f448f1a8
             fmt.Println(vLog.BlockNumber)     // 2394201
             fmt.Println(vLog.TxHash.Hex()) 
+
             event := struct {
-                _box_idx   int
-                _sender [32]byte
-                _value   int
-                _token   int
-                _message string
+                BoxIdx  *big.Int
+                Sender  common.Address
+                Value   *big.Int
+                Token   *big.Int
+                Message string
+                Raw     types.Log // Blockchain specific contextual infos
             }{}
             err := contractAbi.Unpack(&event, "ev_SendABoxEvent", vLog.Data)
             if err != nil {
@@ -68,9 +72,13 @@ func main() {
             }
             
             fmt.Println("event1")
-            fmt.Println(string(event._message[:]))
+            fmt.Println(event.BoxIdx)
             fmt.Println("event2")
-            fmt.Println(string(event._sender[:])) 
+            fmt.Println(event.Sender)
+            fmt.Println(event.Value)
+            fmt.Println(event.Token)
+            fmt.Println(event.Message)
+          
             fmt.Println("event3")
         }
     }
