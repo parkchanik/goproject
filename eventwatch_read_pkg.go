@@ -1,16 +1,17 @@
 package main
 
 import (
-    "context"
+    //"context"
     "fmt"
     "log"
-    "strings"
-    "math/big"
+    //"strings"
+    //"math/big"
 
     "github.com/ethereum/go-ethereum"
-    "github.com/ethereum/go-ethereum/accounts/abi"
+	//"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
     "github.com/ethereum/go-ethereum/common"
-    "github.com/ethereum/go-ethereum/core/types"
+    //"github.com/ethereum/go-ethereum/core/types"
     "github.com/ethereum/go-ethereum/ethclient"
 
     sendabox "./contract" 
@@ -27,32 +28,71 @@ func main() {
 	//contractAddress := common.HexToAddress("0x868eF2CfBd938ca9Ae5ddFa2b6CE2cAdd73b3c36") // local
 	contractAddress := common.HexToAddress("0x8bb30f3e1e5c63f30f3e41cdfaedabe1a45827b9") // ropsten
 	
-    query := ethereum.FilterQuery{
-  
+    
+	query := ethereum.FilterQuery{
+       // FromBlock: big.NewInt(2394201),
+       // ToBlock:   big.NewInt(2394201),
         Addresses: []common.Address{
             contractAddress,
         },
     }
 
+	
+	var filterer bind.ContractFilterer //인터페이스 선언?
 
-	sendboxfilter , err := sendabox.NewSendaboxFilterer(contractAddress , sub)
+	//ContractFilterer 인터페이스의 구조는 이런데 어떻게?
+	/*
+	type ContractFilterer interface {
+		// FilterLogs executes a log filter operation, blocking during execution and
+		// returning all the results in one batch.
+		//
+		// TODO(karalabe): Deprecate when the subscription one can return past data too.
+		FilterLogs(ctx context.Context, query ethereum.FilterQuery) ([]types.Log, error)
+	
+		// SubscribeFilterLogs creates a background log filtering operation, returning
+		// a subscription immediately, which can be used to stream the found events.
+		SubscribeFilterLogs(ctx context.Context, query ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error)
+	}
+	*/
+	
+/*
+    logs, err := client.FilterLogs(context.TODO(), query)
+    if err != nil {
+        log.Fatal(err)
+	}
+
+	logs := make(chan types.Log)
+    sub, err := client.SubscribeFilterLogs(context.TODO(), query, logs)
+    if err != nil {
+		fmt.Println("err-sub")
+		log.Fatal(err)
+		
+	}
+
+*/	
+	fmt.Println("11111")
+	/*
+	// NewSendaboxFilterer creates a new log filterer instance of Sendabox, bound to a specific deployed contract.
+	func NewSendaboxFilterer(address common.Address, filterer bind.ContractFilterer) (*SendaboxFilterer, error) {
+	*/
+	sendboxfilter , err := sendabox.NewSendaboxFilterer(contractAddress , filterer)
 	if err != nil {
 		fmt.Println("err-sendboxfilter")
 		log.Fatal(err)
 		
 	}
- 
+	fmt.Println("22222")
 	sendboxeventiterator , err := sendboxfilter.FilterEvSendABoxEvent(nil , nil , nil)
 	if err != nil {
 		fmt.Println("err-sendboxeventiterator")
 		log.Fatal(err)
 		
 	}
-
+	fmt.Println("33333")
 	
 // Solidity: e ev_SendABoxEvent(_box_idx indexed uint256, _sender indexed address, _value uint256, _token uint256, _message string)
 //func (_Sendabox *SendaboxFilterer) FilterEvSendABoxEvent(opts *bind.FilterOpts, _box_idx []*big.Int, _sender []common.Address) (*SendaboxEvSendABoxEventIterator, error) {
-
+/*
 	
 	
 	fmt.Println("3333")
@@ -91,5 +131,5 @@ func main() {
         fmt.Println(topics[0]) // 0xe79e73da417710ae99aa2088575580a60415d359acfad9cdd3382d59c80281d4
 	}
 	
-
+*/
 }
