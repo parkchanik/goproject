@@ -35,23 +35,25 @@ func main() {
     }
 
 
+	sendboxfilter , err := sendabox.NewSendaboxFilterer(contractAddress , sub)
+	if err != nil {
+		fmt.Println("err-sendboxfilter")
+		log.Fatal(err)
+		
+	}
+ 
+	sendboxeventiterator , err := sendboxfilter.FilterEvSendABoxEvent(nil , nil , nil)
+	if err != nil {
+		fmt.Println("err-sendboxeventiterator")
+		log.Fatal(err)
+		
+	}
+
 	
 // Solidity: e ev_SendABoxEvent(_box_idx indexed uint256, _sender indexed address, _value uint256, _token uint256, _message string)
 //func (_Sendabox *SendaboxFilterer) FilterEvSendABoxEvent(opts *bind.FilterOpts, _box_idx []*big.Int, _sender []common.Address) (*SendaboxEvSendABoxEventIterator, error) {
 
-
-
-	fmt.Println("1111")
-	logs, err := client.FilterLogs(context.Background(), query)
-    if err != nil {
-        log.Fatal(err)
-	}
 	
-	fmt.Println("2222")
-	contractAbi, err := abi.JSON(strings.NewReader(string(sendabox.SendaboxABI)))
-    if err != nil {
-        log.Fatal(err)
-	}
 	
 	fmt.Println("3333")
 	for _, vLog := range logs {
