@@ -58,10 +58,10 @@ func getSendBoxList(c *gin.Context) {
 	var sendbox SendBox 
 
 	var sendboxs []SendBox
-	//row := db.QueryRow("select id, username, first_name, middle_name, last_name, email, mobile_phone, login_attempt, active_status FROM MEMBER_INFO where id = ?;", id)
-	//rows := db.QueryRow("CALL SP_SEND_BOX_LIST(1);")
 	
-	rows , err := db.Query("CALL SP_SEND_BOX_LIST(1);")
+	//rows , err := db.Query("CALL SP_SEND_BOX_LIST(1);") //adhoc 쿼리로 변경 
+	rows, err := db.Query("SELECT boxidx , sender_address , boxmsg , send_wei FROM SendBox ORDER BY boxidx DESC;")
+
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -77,6 +77,7 @@ func getSendBoxList(c *gin.Context) {
 
 	
 	c.Header("Access-Control-Allow-Origin" , "*")
+
 	c.JSON(http.StatusOK, gin.H{
 		"result": sendboxs,
 		"count":  len(sendboxs),
@@ -92,24 +93,30 @@ func getBoxRanking(c *gin.Context) {
 
 	var boxrankings []SendBoxRanking
 
-	rows , err := db.Query("CALL SP_SEND_BOX_RANKING(1);")
-
+	//rows , err := db.Query("CALL SP_SEND_BOX_RANKING(1);")
+	rows , err := db.Query("SELECT 	sender_address , last_boxmsg , total_take_token	FROM SendBox_address ORDER BY total_take_token DESC LIMIT 5")
+	
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
+	rank := 1
+	
 	for rows.Next() {
-		err = rows.Scan(&boxranking.Rank , &boxranking.Sender_address , &boxranking.Last_boxmsg , &boxranking.Total_take_token)
+		err = rows.Scan(&rank , &boxranking.Sender_address , &boxranking.Last_boxmsg , &boxranking.Total_take_token)
 		boxrankings = append(boxrankings , boxranking)
 
 		if err != nil {
 			fmt.Println(err.Error())
 		}
+
+		rank++
 	}
 
 	defer rows.Close()
 
 	c.Header("Access-Control-Allow-Origin" , "*")
+
 	c.JSON(http.StatusOK, gin.H{
 		"result": boxrankings,
 		"count":  len(boxrankings),
@@ -177,23 +184,7 @@ func putMemberInfoByUserNo(c *gin.Context) {
 
 }
 
-
-func getMemberInfoByUserNo(c *gin.Context) {
-	var user User 
-
-	user_no := c.Param("user_no")
-	//row := db.QueryRow("select id, username, first_name, middle_name, last_name, email, mobile_phone, login_attempt, active_status FROM MEMBER_INFO where id = ?;", id)
-	row := db.QueryRow("select user_no , server_idx , publisher_id , auth_idx , nickname , gold , input_time FROM MEMBER_INFO where user_no = ?;", user_no)
-	
-	err = row.Scan(&user.User_no, &user.Server_idx, &user.Publisher_id, &user.Auth_idx, &user.Nickname, &user.Gold, &user.Input_time)
-	if err != nil {
-		c.JSON(http.StatusOK, nil)
-	} else {
-		c.JSON(http.StatusOK, user)
-	}
-}
 */
-
 func main() {
 	
 
@@ -225,7 +216,7 @@ func main() {
 		}
 		c.JSON(http.StatusOK, result)
 	})
-	fmt.Println("test")
+	fmt.Println("잘뜸?")
 	router.Run(":3030")
 
 }
