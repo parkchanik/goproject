@@ -5,49 +5,19 @@ import (
 	//"context"
 	"fmt"
 	"net/http"
-	"database/sql"
+	//"database/sql"
 	//"log"
 	//"strconv"
 	//"golang.org/x/crypto/bcrypt"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+
+	"./models"
+	"./db"
 )
 
 //var db, err = sql.Open("mysql", "yprima:Dbtjdwo1$$@tcp(14.63.127.152:10824)/battle_game")
-var db, err = sql.Open("mysql", "dbchanik:1q2w3e$r@tcp(localhost:3306)/aboxdb")
- 
 
-type User struct {
-	User_no 		string 
-	Server_idx 		int 
-	Publisher_id 	string 
-	Auth_idx 		int 
-	Nickname 		string 
-	Gold 			int 
-	Input_time 		string
-
-}
-
-type SendBox struct {
-	Boxidx 			int 
-	Sender_address 	string 
-	Boxmsg 			string 
-	Send_wei 		int 
-}
-
-type SendBoxRanking struct {
-	Rank 				int
-	Sender_address 		string
-    Last_boxmsg			string
-	Total_take_token 	int
-			
-}
-
-type Person struct {
-	Id         int
-	First_Name string
-	Last_Name  string
-}
 
 func getTestString(c *gin.Context) {
 	
@@ -55,12 +25,12 @@ func getTestString(c *gin.Context) {
 }
 
 func getSendBoxList(c *gin.Context) {
-	var sendbox SendBox 
+	var sendbox models.SendBox 
 
-	var sendboxs []SendBox
+	var sendboxs []models.SendBox
 	
 	//rows , err := db.Query("CALL SP_SEND_BOX_LIST(1);") //adhoc 쿼리로 변경 
-	rows, err := db.Query("SELECT boxidx , sender_address , boxmsg , send_wei FROM SendBox ORDER BY boxidx DESC;")
+	rows, err := db.Init().Query("SELECT boxidx , sender_address , boxmsg , send_wei FROM SendBox ORDER BY boxidx DESC;")
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -89,12 +59,12 @@ func getSendBoxList(c *gin.Context) {
 
 func getBoxRanking(c *gin.Context) {
 
-	var boxranking SendBoxRanking
+	var boxranking models.SendBoxRanking
 
-	var boxrankings []SendBoxRanking
+	var boxrankings []models.SendBoxRanking
 
 	//rows , err := db.Query("CALL SP_SEND_BOX_RANKING(1);")
-	rows , err := db.Query("SELECT 	sender_address , last_boxmsg , total_take_token	FROM SendBox_address ORDER BY total_take_token DESC LIMIT 5")
+	rows , err := db.Init().Query("SELECT 	sender_address , last_boxmsg , total_take_token	FROM SendBox_address ORDER BY total_take_token DESC LIMIT 5")
 	
 	if err != nil {
 		fmt.Println(err.Error())
@@ -136,9 +106,9 @@ func postTakeBox(c *gin.Context) {
 	boxidx := c.PostForm("boxidx")
 	takeaddress := c.PostForm("takeaddress")
 
-	row := db.QueryRow("CALL SP_SEND_BOX_CAN_TAKE_SENDBOX(?,?,@o_return);" , boxidx , takeaddress)
+	row := db.Init().QueryRow("CALL SP_SEND_BOX_CAN_TAKE_SENDBOX(?,?,@o_return);" , boxidx , takeaddress)
 
-	err = row.Scan(&outreturn.O_return)
+	err := row.Scan(&outreturn.O_return)
 
 	c.Header("Access-Control-Allow-Origin" , "*")
 	c.JSON(http.StatusOK, gin.H{
@@ -185,37 +155,26 @@ func putMemberInfoByUserNo(c *gin.Context) {
 }
 
 */
+func setRouter() *gin.Engine {
+	router := gin.Default()
+
+	v1 := router.Group("api/v1")
+	{
+		v1.GET("/", getTestString)
+		v1.GET("/sendaboxlist" , getSendBoxList)
+		v1.GET("/sendaboxranking", getBoxRanking)
+		v1.POST("/takeabox" , postTakeBox)
+	}
+	return router
+  }
+
+
+  
 func main() {
 	
 
-	router := gin.Default()
-	//router.GET("/api/user/:user_no", getMemberInfoByUserNo)
-    router.GET("/" , getTestString)
-	router.GET("/sendaboxlist", getSendBoxList)
-	router.GET("/sendaboxranking", getBoxRanking)
-	router.POST("/takeabox" , postTakeBox)
-	router.GET("/person/:id", func(c *gin.Context) {
-		var (
-			person Person
-			result gin.H
-		)
-		id := c.Param("id")
-		row := db.QueryRow("select id, first_name, last_name from person where id = ?;", id)
-		err = row.Scan(&person.Id, &person.First_Name, &person.Last_Name)
-		if err != nil {
-			// If no results send null
-			result = gin.H{
-				"result": nil,
-				"count":  0,
-			}
-		} else {
-			result = gin.H{
-				"result": person,
-				"count":  1,
-			}
-		}
-		c.JSON(http.StatusOK, result)
-	})
+	router := setRouter()
+	
 	fmt.Println("잘뜸?")
 	router.Run(":3030")
 
