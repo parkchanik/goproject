@@ -6,7 +6,7 @@ import (
     "log"
     "strings"
     "math/big"
-    "database/sql"
+    //"database/sql"
 
     "github.com/ethereum/go-ethereum"
     "github.com/ethereum/go-ethereum/accounts/abi"
@@ -49,8 +49,7 @@ func main() {
     for {
         select {
         case err := <-sub.Err():
-            fmt.Println("sdd")
-			log.Fatal(err)
+            log.Fatal(err)
         case vLog := <-logs:
             /*
             fmt.Println("vlog")
@@ -100,41 +99,39 @@ func main() {
 
             fmt.Printf("boxid : %d\n" , event_boxidx)
             fmt.Printf("sender : %s\n" , event_sender)
+            
+            message := string(event.Message)
+            wei := event.Value.Int64()
+            token := event.Token.Int64() // Int64()로 컨버팅 하지 않으면 에러 - converting argument $5 type: unsupported type big.Int, a struct
+            blockhash := vLog.BlockHash.Hex()
+            blocknumber := vLog.BlockNumber
+            txhash := vLog.TxHash.Hex()
+            txindex := vLog.TxIndex
+            logindex := vLog.Index
+    
+    
+            boxidx_big := vLog.Topics[1].Big()
+            boxidx := boxidx_big.Int64()
+    
+            sender := vLog.Topics[2].String()
+                
+            fmt.Printf("boxid : %d\n" , boxidx)
+            fmt.Printf("sender : %s\n" , sender)
 
-            stmt, err := db.Prepare("insert into user (username, password, first_name, middle_name, last_name, email, mobile_phone, login_attempt, remote_address, active_status) values(?,?,?,?,?,?,?,?,?,?);")
-            checkErr(err)
+            
+            
+            type OutReturn struct {
+                O_return         int
+            }
+            var outreturn OutReturn
+            row := db.Init().QueryRow("CALL SP_SEND_BOX(?,?,?,?,?,?,?,?,?,?,?);" , boxidx , sender , message , wei , token , logindex , txindex , txhash , blockhash , blocknumber , 0  )
 
-            _, err = stmt.Exec(Username, string(HashedPassword), FirstName, MiddleName, LastName, Email, MobilePhone, LoginAttempt, RemoteAddress, ActiveStatus)
-            checkErr(err)
-
-            stmt, err := db.Prepare("INSERT userinfo SET username=?, departname=?, created=?")
-            checkErr(err)
-
-            res, err := stmt.Exec("yundream", "software", "2017-06-10")
-            checkErr(err)
-            tx, err := db.Begin()
+            err = row.Scan(&outreturn.O_return)
             if err != nil {
+                fmt.Println("err Scan")
                 log.Fatal(err)
+                
             }
-            defer tx.Rollback()
-            stmt, err := tx.Prepare("INSERT INTO foo VALUES (?)")
-            if err != nil {
-                log.Fatal(err)
-            }
-            defer stmt.Close() // danger!
-            for i := 0; i < 10; i++ {
-                _, err = stmt.Exec(i)
-                if err != nil {
-                    log.Fatal(err)
-                }
-            }
-            err = tx.Commit()
-            if err != nil {
-                log.Fatal(err)
-            }
-            // stmt.Close() runs her
-
-            defer stmt.Close()
         
         
         }
