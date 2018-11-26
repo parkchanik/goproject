@@ -73,7 +73,8 @@ func getBoxRanking(c *gin.Context) {
 	rank := 1
 	
 	for rows.Next() {
-		err = rows.Scan(&rank , &boxranking.Sender_address , &boxranking.Last_boxmsg , &boxranking.Total_take_token)
+		err = rows.Scan(&boxranking.Sender_address , &boxranking.Last_boxmsg , &boxranking.Total_take_token)
+		boxranking.Rank = rank
 		boxrankings = append(boxrankings , boxranking)
 
 		if err != nil {

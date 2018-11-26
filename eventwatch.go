@@ -15,18 +15,19 @@ import (
     "github.com/ethereum/go-ethereum/ethclient"
 
     sendabox "./contract" 
+    "./db"
 )
 
-//var db, err = sql.Open("mysql", "yprima:Dbtjdwo1$$@tcp(14.63.127.152:10824)/battle_game")
-var db, err = sql.Open("mysql", "dbchanik:1q2w3e$r@tcp(localhost:3306)/aboxdb")
+func checkErr(err error) {
+    if err != nil {
+        panic(err)
+    }
+}
 
 func main() {
 	client, err := ethclient.Dial("wss://ropsten.infura.io/ws")
 	//client, err := ethclient.Dial("ws://localhost:8545/ws")
-    if err != nil {
-		log.Fatal(err)
-		fmt.Println("err1")
-    }
+    checkErr(err)
 
     //contractAddress := common.HexToAddress("0x868eF2CfBd938ca9Ae5ddFa2b6CE2cAdd73b3c36") // local
     //contractAddress := common.HexToAddress("0x9e51806f5d074cff7dcea42997860d1176def99b") // local office
@@ -36,20 +37,14 @@ func main() {
     query := ethereum.FilterQuery{
         Addresses: []common.Address{contractAddress},
     }
-	fmt.Println("err2")
+	
     logs := make(chan types.Log)
     sub, err := client.SubscribeFilterLogs(context.TODO(), query, logs)
-    if err != nil {
-		fmt.Println("err2-1")
-		log.Fatal(err)
-		
-    }
-    fmt.Println("err3")
+    checkErr(err)
+    
     
     contractAbi, err := abi.JSON(strings.NewReader(string(sendabox.SendaboxABI)))
-    if err != nil {
-        log.Fatal(err)
-    }
+    checkErr(err)
     
     for {
         select {
@@ -80,10 +75,7 @@ func main() {
                 Raw     types.Log // Blockchain specific contextual infos
             }{}
             err := contractAbi.Unpack(&event, "ev_SendABoxEvent", vLog.Data)
-            if err != nil {
-                fmt.Println("abierr")
-                log.Fatal(err)
-            }
+            checkErr(err)
             
             
         
@@ -98,16 +90,52 @@ func main() {
 
       var stmt = 'CALL SP_SEND_BOX(?,?,?,?,?,?,?,?,?,?,?); ';
         */
-        fmt.Printf("Topics[0] : %s\n " , vLog.Topics[0].Hex()) //topic[0] event Signature
-        fmt.Printf("Topics[1] : %s\n " , vLog.Topics[1].Hex()) //topic[1] 내가 첫번째 index 로 잡았던 event  _box_idx
-        fmt.Printf("Topics[2] : %s\n " , vLog.Topics[2]) //topic[2] 내가 두번째 index 로 잡았던 event  _sender
+        //fmt.Printf("Topics[0] : %s\n " , vLog.Topics[0].Hex()) //topic[0] event Signature
+        //fmt.Printf("Topics[1] : %s\n " , vLog.Topics[1].Hex()) //topic[1] 내가 첫번째 index 로 잡았던 event  _box_idx
+        //fmt.Printf("Topics[2] : %s\n " , vLog.Topics[2]) //topic[2] 내가 두번째 index 로 잡았던 event  _sender
        
 
-        event_boxidx := vLog.Topics[1].Hex()
-        event_sender := vLog.Topics[2].Hex()
+            event_boxidx := vLog.Topics[1].Hex()
+            event_sender := vLog.Topics[2].Hex()
 
-        fmt.Printf("boxid : %d\n" , event_boxidx)
-        fmt.Printf("sender : %s\n" , event_sender)
+            fmt.Printf("boxid : %d\n" , event_boxidx)
+            fmt.Printf("sender : %s\n" , event_sender)
+
+            stmt, err := db.Prepare("insert into user (username, password, first_name, middle_name, last_name, email, mobile_phone, login_attempt, remote_address, active_status) values(?,?,?,?,?,?,?,?,?,?);")
+            checkErr(err)
+
+            _, err = stmt.Exec(Username, string(HashedPassword), FirstName, MiddleName, LastName, Email, MobilePhone, LoginAttempt, RemoteAddress, ActiveStatus)
+            checkErr(err)
+
+            stmt, err := db.Prepare("INSERT userinfo SET username=?, departname=?, created=?")
+            checkErr(err)
+
+            res, err := stmt.Exec("yundream", "software", "2017-06-10")
+            checkErr(err)
+            tx, err := db.Begin()
+            if err != nil {
+                log.Fatal(err)
+            }
+            defer tx.Rollback()
+            stmt, err := tx.Prepare("INSERT INTO foo VALUES (?)")
+            if err != nil {
+                log.Fatal(err)
+            }
+            defer stmt.Close() // danger!
+            for i := 0; i < 10; i++ {
+                _, err = stmt.Exec(i)
+                if err != nil {
+                    log.Fatal(err)
+                }
+            }
+            err = tx.Commit()
+            if err != nil {
+                log.Fatal(err)
+            }
+            // stmt.Close() runs her
+
+            defer stmt.Close()
+        
         
         }
     }
