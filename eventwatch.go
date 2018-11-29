@@ -118,15 +118,16 @@ func main() {
             fmt.Printf("boxid : %d\n" , boxidx)
             fmt.Printf("sender : %s\n" , sender)
 
-            
+            fmt.Printf("CALL SP_SEND_BOX(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" , boxidx , sender , message , wei , token , logindex , txindex , txhash , blockhash , blocknumber , 0)
             
             type OutReturn struct {
                 O_return         int
             }
             var outreturn OutReturn
             row := db.Init().QueryRow("CALL SP_SEND_BOX(?,?,?,?,?,?,?,?,?,?,?);" , boxidx , sender , message , wei , token , logindex , txindex , txhash , blockhash , blocknumber , 0  )
-
+            
             err = row.Scan(&outreturn.O_return)
+
             if err != nil {
                 fmt.Println("err Scan")
                 log.Fatal(err)

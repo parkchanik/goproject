@@ -30,7 +30,7 @@ func getSendBoxList(c *gin.Context) {
 	var sendboxs []models.SendBox
 	
 	//rows , err := db.Query("CALL SP_SEND_BOX_LIST(1);") //adhoc 쿼리로 변경 
-	rows, err := db.Init().Query("SELECT boxidx , sender_address , boxmsg , send_wei FROM SendBox ORDER BY boxidx DESC;")
+	rows, err := db.Init().Query("SELECT boxidx , sender_address , boxmsg , send_wei FROM sendbox ORDER BY boxidx DESC;")
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -64,7 +64,7 @@ func getBoxRanking(c *gin.Context) {
 	var boxrankings []models.SendBoxRanking
 
 	//rows , err := db.Query("CALL SP_SEND_BOX_RANKING(1);")
-	rows , err := db.Init().Query("SELECT 	sender_address , last_boxmsg , total_take_token	FROM SendBox_address ORDER BY total_take_token DESC LIMIT 5")
+	rows , err := db.Init().Query("SELECT 	sender_address , last_boxmsg , total_take_token	FROM sendbox_address ORDER BY total_take_token DESC LIMIT 5")
 	
 	if err != nil {
 		fmt.Println(err.Error())
